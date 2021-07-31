@@ -1,0 +1,221 @@
+
+Q1) Write a query to display department name, name (first_name, last_name), hiredate, salary of the manager for all managers whose experience is more than 15 years.
+[2 Marks]
+
+=>select department_name,concat(first_name," ",last_name)as name,hiredate,salary 
+from employees 
+where job_id like"%mgr" and (now()-hire_date)>=15;
+or
+SELECT first_name, last_name, hire_date, salary, 
+(DATEDIFF(now(), hire_date))/365 Experience 
+FROM departments d JOIN employees e 
+ON (d.manager_id = e.employee_id) 
+WHERE (DATEDIFF(now(), hire_date))/365>15;
+
+Q2) Create a report to display the manager number and the salary of the lowest-paid employee for that manager. Exclude anyone whose manager is not known. Exclude any groups where the minimum salary is $6,000 or less. Sort the output in descending order of salary.
+[2 Marks]
+
+=>select manager_id,min(salary) from employees where manager_id is not null group by manager_id having min(SALARY)>6000 order by min(salary)desc; 
+
+Q3) Write SELECT statement to achieve the following:
+[1 marks each]
+1. Display the Employee’s ID, Column with concatenation of First Name and Last Name, Salary who is living in ‘London’.
+
+=>SELECT  first_name, last_name, employee_id, job_id  
+FROM employees  
+WHERE department_id = 
+(SELECT department_id  
+FROM departments 
+WHERE location_id = 
+(SELECT location_id 
+FROM locations  
+WHERE city ='London'));
+
+
+2. Display the Employee’s Last name whose name starts with ‘s’.
+
+=>select last_name from employees where first_name like"s%";
+
+3. Find the Employee Joining date on the first Monday in October month.
+
+=>select first_name,hire_date   from employees   where
+to_char(hiredate,'MON')='OCT' AND to_char(hiredate,'DAY')='MONDAY'
+or
+select hire_date as join_date from employees where (month(hire_date)=10) and (weekday(hire_date)=0);
+
+4. Display the Employee name and city in capital letters.
+
+=>SELECT UPPER(E.FIRST_NAME) AS "name",
+D.DEPARTMENT_ID,UPPER(L.CITY) AS "city"
+FROM EMPLOYEES E 
+LEFT JOIN DEPARTMENTS D ON E.DEPARTMENT_ID=D.DEPARTMENT_ID
+LEFT JOIN LOCATIONs L ON L.LOCATION_ID=D.LOCATION_ID
+
+5. Display the department and their max salary of the same department.
+
+=>SELECT department_id, MAX(salary) FROM Employees GROUP BY department_id;
+	
+
+Q4) Delete duplicate rows using an intermediate table. [2 Marks]
+
+=>
+--->CREATE TABLE contacts (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL, 
+    email VARCHAR(255) NOT NULL
+);
+
+
+-->INSERT INTO contacts (first_name,last_name,email) 
+VALUES(('Carine ','Schmitt','carine.schmitt@verizon.net'),
+       ('Jean','King','jean.king@me.com'),
+       ('Peter','Ferguson','peter.ferguson@google.com'),
+       ('Janine ','Labrune','janine.labrune@aol.com'),
+       ('Jonas ','Bergulfsen','jonas.bergulfsen@mac.com'),
+       ('Janine ','Labrune','janine.labrune@aol.com'),
+       ('Susan','Nelson','susan.nelson@comcast.net'));
+
+
+
+-->CREATE TABLE contacts_temp 
+LIKE contacts;
+
+
+--->INSERT INTO contacts_temp
+SELECT * 
+FROM contacts 
+GROUP BY email;
+
+
+
+--->DROP TABLE contacts;
+
+ALTER TABLE contacts_temp 
+RENAME TO contacts;
+
+
+
+Q5) Create an index on the month values of the hire_date column in the employees table. [2 Marks]
+
+=>create index ind1 on employees (hire_date);
+
+Q6) CREATE A VIEW ON THE EMPLOYEES TABLE WITH EMPNO , EMPNAME, EMPSALARY
+[5 Marks]
+1. UPDATE THE SALARY OF EMPLOYEE ID = 105;
+2. DELETE THE ROW OF THE EMPLOYEE ID = 106;
+3. UPDATE THE EMPLOYEE DEPARTMENT ID OF THE EMPLOYEEID = 108 OBSERVE THE PARENT TABLE EMPLOYEES
+
+=>create or replace view emp_data
+as
+select employee_id, concat (first_name, " ",last_name) as employee_name, salary from employees;
+
+1. update emp_data set salary=6000 where employee_id-105;
+2.delete from emp_data where employee_id=106;
+3. update emp data set department_id=1500 where employee_id=108;
+group by department_name;
+
+
+Q7) Write a query in SQL to display the job title, department name, full name (first and last name ) of employee, and starting date for all the jobs which started on or after 1st January, 1993 and ending with on or before 31 August, 1997.
+[2 Marks]
+
+=>SELECT job_title, department_name,concat(first_name," ",last_name) AS Employee_name, start_date 
+FROM job_history 
+JOIN jobs USING (job_id) 
+JOIN departments USING (department_id) 
+JOIN  employees USING (employee_id) 
+WHERE start_date>='1993-01-01' AND start_date<='1997-08-31';
+
+Q8) Write a query in SQL to display full name(first and last name), job title, starting and ending date of last jobs for those employees who worked without a commission percentage. [2 Marks]
+
+SELECT CONCAT(e.first_name, ' ', e.last_name) AS Employee_name,
+       j.job_title,
+       h.*
+FROM employees e
+JOIN
+(SELECT start_date,
+end_date,
+employee_id
+FROM job_history
+GROUP BY employee_id) h ON e.employee_id=h.employee_id
+JOIN jobs j ON j.job_id=e.job_id
+WHERE e.commission_pct is null;
+
+Q9) Write a query in SQL to display the first name of all employees and the first name of their manager including those who do not work under any manager.[2 Marks]
+
+=>SELECT E.first_name AS "Employee Name",
+M.first_name AS "Manager"
+FROM employees E 
+ LEFT OUTER JOIN employees M
+ ON E.manager_id = M.employee_id;
+
+
+Q10) Write a query in SQL to display those employees who contain a letter z to their first name and also display their last name, department, city, and state province.
+[2 Marks]
+
+=>SELECT e.first_name,
+       e.last_name,
+       d.department_name,
+       l.city,
+       l.state_province
+  FROM employees e
+  INNER JOIN departments d
+    ON e.department_id = d.department_id
+  INNER JOIN locations l
+    ON d.location_id = l.location_id
+  WHERE e.first_name LIKE '%z%';
+
+Q11) Write a query in SQL to display all departments including those where it does not have any employee.
+[2 Marks]
+
+=>select department_name from departments;
+or
+SELECT E.first_name, E.last_name, D.department_id, D.department_name
+ FROM employees E
+   RIGHT OUTER JOIN departments D
+     ON E.department_id = D.department_id;
+
+Q12) Write a query in SQL to display the first and last name and salary for those employees who earn less than the employee whose number is 182.
+[2 Marks]
+
+=>SELECT E.first_name, E.last_name, E.salary 
+FROM employees E 
+JOIN employees S ON E.salary < S.salary AND S.employee_id = 182;
+
+Q13) Write a query in SQL to display the first name of all employees including the first name of their manager.
+[3 Marks]
+
+=>SELECT e1.first_name AS "employee_name",
+       e2.first_name AS "manager_name"
+  FROM employees e1
+  INNER JOIN employees e2
+    ON e1.manager_id = e2.employee_id;
+
+Q14) Write a query in SQL to display the department name, city, and state province for each department.
+[3 Marks]
+
+=>SELECT d.department_name,
+       l.city,
+       l.state_province
+  FROM departments d
+  INNER JOIN locations l
+    ON d.location_id = l.location_id;
+
+
+Q15) Mongo Question [4 Marks]
+1) Sort the records in ascending order of age.
+
+=>db.employee.find().sort({age:1})
+
+2) Display the records with last name Kumari
+
+=>db.employee.find({last_name:"Kumari"});
+
+3) Display the records of gender Male.
+
+=>db.employee.find({gender:"male"});
+
+4) Display the records whose age is 57 years.
+
+=>db.employee.find({age:57});
+********************************************************All the best************************************************************
